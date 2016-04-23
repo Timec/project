@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xsi:schemaLocation="http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security-4.0.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<security:http pattern="/resources/**" security="none"/>
+	<security:http pattern="/dtds/**" security="none" />
+	<security:http pattern="/js/**" security="none"/>
+	<security:http pattern="/sample/**" security="none"/>
+	<security:http pattern="/favicon.ico" security="none"/>
+	
+	<security:http auto-config='true' use-expressions="true" create-session="never" entry-point-ref="unauthorizedEntryPoint">
+	    <security:intercept-url pattern="/login" access="permitAll" />
+	    <security:intercept-url pattern="/login_duplicate" access="permitAll" />
+	    <security:intercept-url pattern="/**" access="permitAll" />
+	    <security:form-login login-page="/login"
+	    			login-processing-url="/loginProcess"
+	                username-parameter="id"
+	                password-parameter="pw"
+	                default-target-url="/"
+	                authentication-success-handler-ref="cmmAuthenticationSuccessHandler"
+	                authentication-failure-handler-ref="cmmAuthenticationFailureHandler"
+	                always-use-default-target='true'
+	                />
+	    <security:session-management>
+	        <security:concurrency-control max-sessions="1" expired-url="/login_duplicate" error-if-maximum-exceeded="true"/>
+	    </security:session-management>
+	    <security:logout delete-cookies="JSESSIONID"/>
+	    <security:logout logout-success-url="/login"/>
+	    <security:access-denied-handler ref="cmmAccessDeniedHandler" />
+	    
+	    <security:custom-filter ref="authenticationTokenProcessingFilter" before="FORM_LOGIN_FILTER" />
+	</security:http>
+	
+	<bean id="unauthorizedEntryPoint" class="com.core.security.handler.UnauthorizedEntryPoint">
+        <property name="loginFormUrl" value="/login"/>
+    </bean>
+    <bean id="authenticationTokenProcessingFilter" class="com.core.security.AuthenticationTokenProcessingFilter" />
+    
+	<security:authentication-manager alias="authenticationManager">
+		<security:authentication-provider ref="cmmAuthenticationProvider"/>
+	</security:authentication-manager>
+	
+	<bean id="cmmAuthenticationSuccessHandler" class="com.core.security.handler.CmmAuthenticationSuccessHandler">
+	    <property name="targetUrlParameter" value="loginRedirect" />
+	    <property name="useReferer" value="false" />
+	    <property name="defaultUrl" value="/" />
+	</bean>
+		
+	<bean id="cmmAuthenticationFailureHandler" class="com.core.security.handler.CmmAuthenticationFailureHandler">
+	    <property name="loginIdName" value="id" />
+	    <property name="loginPwdName" value="pw" />
+	    <property name="loginRedirectName" value="loginRedirect" />
+	    <property name="exceptionMsgName" value="securityExceptionMsg" />
+	    <property name="defaultFailureUrl" value="/login" />
+	</bean>
+	
+	<bean id="cmmAccessDeniedHandler" class="com.core.security.handler.CmmAccessDeniedHandler">
+	    <property name="errorPage" value="/access_denied" />
+	</bean>
+	
+	<bean class="org.springframework.security.web.access.expression.DefaultWebSecurityExpressionHandler"/>
+	
+	<bean id="cmmUserService" class="com.chincook.common.login.CmmUserService"/>
+
+	<bean id="cmmAuthenticationProvider" class="com.chincook.common.login.LoginProvider"/>
+	
+	<bean id="passwordEncoder" class="org.springframework.security.authentication.encoding.ShaPasswordEncoder">
+		<constructor-arg value="256"/>
+		<property name="encodeHashAsBase64" value="true"/>
+	</bean>
+	
+	<bean id="saltSource" class="org.springframework.security.authentication.dao.ReflectionSaltSource">
+		<property name="userPropertyToUse" value="salt"/>
+	</bean>
+</beans>

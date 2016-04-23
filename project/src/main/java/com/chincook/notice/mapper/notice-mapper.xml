@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.chincook.notice.NoticeDAO">
+  <select id="list" resultType="hashmap" >
+    <![CDATA[
+    SELECT "BBS_ID", "CN_ID", "TITLE", "CONTENT"
+      FROM "TBBSNOTI"
+	]]>
+  </select>
+  
+  <select id="total_cnt" resultType="String" >
+  <![CDATA[ 
+    SELECT COUNT(*) AS TOTAL_CNT
+	  FROM TCOCODEM
+	 WHERE 1=1
+	 ]]>
+ 	  <if test="search_major_cd != null and search_major_cd != ''">
+		AND MAJOR_CD = #{search_major_cd}	
+	  </if>
+	  <if test="search_minor_cd != null and search_minor_cd != ''">
+		AND MINOR_CD = #{search_minor_cd}	
+	  </if>
+	  <if test="search_code_nm != null and search_code_nm != ''">
+		AND (CODE_NM1 LIKE '%${search_code_nm}%' OR T_CODE_NM1 LIKE '%${search_code_nm}%')	
+	  </if>
+	  <if test="search_code_idx1 != null and search_code_idx1 != ''">
+		AND CODE_IDX1 = #{search_code_idx1}	
+	  </if>
+  </select>
+  <select id="edit" resultType="hashmap">
+  <![CDATA[
+  	SELECT "BBS_ID", "CN_ID", "TITLE", "CONTENT"
+  	  FROM "TBBSNOTI"
+  	 WHERE "BBS_ID" = #{0}
+       AND "CN_ID" = #{1}
+  ]]>
+  </select>
+  <update id="update" parameterType="com.chincook.notice.NoticeVO">
+  <![CDATA[
+  UPDATE "TBBSNOTI"
+  	 SET "TITLE" = #{title}, 
+         "CONTENT" = #{content}
+   WHERE "BBS_ID" = #{bbs_id} 
+     AND "CN_ID" = #{cn_id} 
+  ]]>
+  </update>
+  <insert id="insert" parameterType="com.chincook.notice.NoticeVO">
+  <![CDATA[
+  INSERT 
+    INTO "TBBSNOTI"(
+         "BBS_ID", 
+         "CN_ID", 
+         "TITLE", 
+         "CONTENT")
+  VALUES (
+  		 '12',
+  		 '333',
+  		 #{title},
+  		 #{content})
+  ]]>
+  </insert>
+  <delete id="delete">
+  <![CDATA[
+    DELETE 
+      FROM TCOCODEM
+     WHERE MAJOR_CD = #{0}
+       AND MINOR_CD = #{1}
+  ]]>
+  </delete>
+</mapper>
